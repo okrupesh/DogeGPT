@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DogeGPT 🐾</title>
+    <!-- <link rel="shortcut icon" type="image/png" href="../logo.png" /> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            background-color: #222;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 0.5rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .answer-button {
+            background-color: #1f1f1f;
+            color: #e6e6e6;
+            border: none;
+            padding: 0.8rem 2rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .answer-button:hover {
+            background-color: #444;
+        }
+
+        .counter {
+            font-size: 0.9rem;
+            margin-top: 1.5rem;
+        }
+
+        .answer-container {
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .answer-text {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes animate-up {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
+        }
+
+        @keyframes animate-writing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DogeGPT 🐾</h1>
+        <p class="question">Ask a question:</p>
+        <form class="question-form">
+            <input class="question-input" type="text" name="question" placeholder="Enter your question" required>
+            <br><br>
+            <button class="answer-button" type="submit"><i class="fas fa-paw"></i> Answer</button>
+        </form>
+        <p class="counter">Questions answered: {{ counter }}</p>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const answerButton = document.querySelector('.answer-button');
+            const questionForm = document.querySelector('.question-form');
+            const questionInput = document.querySelector('.question-input');
+            const counter = document.querySelector('.counter');
+            let currentCounter = parseInt(counter.innerText.split(':')[1].trim());
+
+            answerButton.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const question = questionInput.value;
+                if (question.trim() === '') return;
+
+                const response = await fetch('/answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question })
+                });
+                const data = await response.json();
+                displayAnswer(question, data.response);
+                questionForm.reset();
+                updateCounter();
+            });
+
+            function displayAnswer(question, answer) {
+                const answerContainer = document.createElement('div');
+                answerContainer.classList.add('answer-container');
+
+                const questionElement = document.createElement('p');
+                questionElement.classList.add('question-text');
+                questionElement.textContent = question;
+
+                const answerElement = document.createElement('p');
+                answerElement.classList.add('answer-text');
+                answerElement.textContent = '';
+
+                answerContainer.appendChild(questionElement);
+                answerContainer.appendChild(answerElement);
+                document.body.appendChild(answerContainer);
+
+                setTimeout(() => {
+                    questionElement.classList.add('animate-up');
+                    answerElement.classList.add('animate-writing');
+                }, 100);
+
+                const answerText = answer.trim() === '' ? 'woof woof!' : answer;
+                animateWriting(answerText, answerElement);
+            }
+
+            function animateWriting(text, element) {
+                const characters = text.split('');
+                let index = 0;
+                let writingInterval;
+
+                writingInterval = setInterval(() => {
+                    if (index < characters.length) {
+                        element.textContent += characters[index];
+                        index++;
+                    } else {
+                        clearInterval(writingInterval);
+                        animateBarks(element);
+                    }
+                }, 100);
+            }
+
+            function animateBarks(element) {
+                const numBarks = getRandomNumber(3, 5); // Randomize number of barks
+                let barkCount = 0;
+
+                const barkInterval = setInterval(() => {
+                    if (barkCount < numBarks) {
+                        element.textContent += ' bhow!';
+                        barkCount++;
+                    } else {
+                        clearInterval(barkInterval);
+                        removeAnswer(element);
+                    }
+                }, 400);
+            }
+
+            function removeAnswer(element) {
+                setTimeout(() => {
+                    const answerContainer = element.parentNode;
+                    answerContainer.remove();
+                }, 1500);
+            }
+
+            function updateCounter() {
+                currentCounter += 1;
+                counter.innerText = `Questions answered: ${currentCounter}`;
+            }
+
+            function getRandomNumber(min, max) {
+                return Math.floor(Math.random() * (max - min + 1) + min);
+            }
+        });
+    </script>
+</body>
+</html>
